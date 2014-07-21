@@ -2,6 +2,8 @@
 #include<math.h>
 #include<stdio.h>
 
+#define nodeNum 5 
+
 typedef struct bbox bbox;
 struct bbox {
 	int min_x;
@@ -14,7 +16,7 @@ struct node {
 	int x;
 	int y;
 	int childNum;
-	node *child[5];
+	node *child[nodeNum];
 	node *parent;
 	bbox box;
 	int level;
@@ -33,7 +35,7 @@ node* get_leafNode(int x,int y){
 	new->y = y;
 	new->level = 0;
 	int i;
-	for(i = 0 ; i < 5; i++){
+	for(i = 0 ; i < nodeNum; i++){
 		new->child[i] = NULL;
 	}
 	new->parent = NULL;
@@ -164,13 +166,13 @@ node* addToMbr(node *mbr,node *new){
 	}
 	return mbr;
 }
-void BubbleSort(int xy[6][2]){
+void BubbleSort(int xy[nodeNum+1][2]){
 	int i;
 	int j;
 	int temp_x;
 	int temp_y;
-	for(i = 0 ; i <6;i++){
-		for(j = 0;j <6-1-i;j++){
+	for(i = 0 ; i <nodeNum+1;i++){
+		for(j = 0;j <nodeNum+1-1-i;j++){
 			if(xy[j][0]>xy[j+1][0]){
 				temp_x = xy[j+1][0];
 				temp_y = xy[j+1][1];
@@ -275,8 +277,8 @@ void split_node(node *parent,node *newMbr,node *nowMbr,node *entry){
 		node *index;
 		parent = addToMbr(parent,newMbr);
 		int i;
-		int xy[6][2]; 
-		for(i = 0 ; i < 5; i++){
+		int xy[nodeNum+1][2]; 
+		for(i = 0 ; i < nodeNum; i++){
 			int x = nowMbr->child[i]->x;
 			int y = nowMbr->child[i]->y;
 			xy[i][0] = x;
@@ -285,15 +287,15 @@ void split_node(node *parent,node *newMbr,node *nowMbr,node *entry){
 		xy[i][0] = entry->x;
 		xy[i][1] = entry->y;
 		BubbleSort(xy);
-		for(i = 0 ; i < 5 ;i++){
+		for(i = 0 ; i < nodeNum ;i++){
 			nowMbr->child[i] =NULL;
 		}
 		nowMbr->childNum = 0;
-		for(i = 0; i< 3;i++){
+		for(i = 0; i< (nodeNum+1)/3;i++){
 			node *leaf = get_leafNode(xy[i][0],xy[i][1]);
 			nowMbr = addToMbr(nowMbr,leaf);
 		}
-		for(i = 3;i < 6;i++){
+		for(i = (nodeNum+1)/3;i < nodeNum+1;i++){
 			node *leaf = get_leafNode(xy[i][0],xy[i][1]);
 			newMbr = addToMbr(newMbr,leaf);
 		}
@@ -302,7 +304,7 @@ void split_node(node *parent,node *newMbr,node *nowMbr,node *entry){
 
 void chooseNodeToInsert(node *parent,node *entry){
 	if(parent->level == 1){
-		if(parent->childNum == 5){
+		if(parent->childNum == nodeNum){
 			node *father = parent->parent;
 			node *newNode = get_nonleafNode();
 			node *nowMbr = parent;
@@ -320,7 +322,7 @@ void chooseNodeToInsert(node *parent,node *entry){
 			updateInformation(father);
 		}
 	}else{
-		if(parent->childNum == 5){
+		if(parent->childNum == nodeNum){
 			if(parent->parent==NULL){
 			//create new parent and add a newMbr to this parent
 				node *newparent = get_nonleafNode();
@@ -423,9 +425,6 @@ int main(int argc,char *argv[]){
 		return 0;
 	}else{
 		ptr = fopen(argv[1],"r");
-	}
-	if(ptr==NULL){
-		printf("fuck\n");
 	}
 	//initial rtree
 	rtree = get_nonleafNode();
